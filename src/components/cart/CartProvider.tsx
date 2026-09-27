@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { cartLineSchema, type CartLineInput } from "@/lib/cart-schema";
+import type { CartLineInput } from "@/lib/cart-schema";
+import { parseStoredCart } from "@/lib/cart-storage";
 import { localParts } from "@/lib/hours";
 import type { MenuSnapshot } from "@/lib/menu-types";
 import { quoteCart, type Quote } from "@/lib/pricing";
@@ -34,16 +35,9 @@ const MAX_LINES = 30;
 
 function readStored(): CartLine[] {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    // Drop anything that no longer fits the schema (e.g. saved by an older version of the site).
-    return parsed.flatMap((l) => {
-      const ok = cartLineSchema.safeParse({ ...l, id: undefined });
-      return ok.success && typeof l?.id === "string" ? [{ ...ok.data, id: l.id }] : [];
-    });
+    return parseStoredCart(window.localStorage.getItem(STORAGE_KEY));
   } catch {
+    // Storage blocked (some private modes throw on access).
     return [];
   }
 }
