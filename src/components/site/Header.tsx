@@ -43,7 +43,7 @@ export function Header({ store }: { store: StoreInfo }) {
       <div className="border-b border-ink/10 bg-white/95 backdrop-blur">
         <div className="container-page flex h-16 items-center gap-3 md:h-20">
           <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="786 Pizza & Wings home">
-            <Image src="/images/logo.webp" alt="" width={400} height={500} priority className="h-13 w-auto md:h-16" />
+            <Image src="/images/logo.webp" alt="" width={400} height={500} loading="eager" className="h-13 w-auto md:h-16" />
             <span className="h-display text-lg leading-none text-ink sm:text-xl">
               786 Pizza <span className="text-tomato-600">&amp;</span> Wings
               <span className="mt-0.5 block text-[0.65rem] font-semibold tracking-wide text-brand-700 sm:text-xs">STONE-BAKED · SINCE 1998</span>
