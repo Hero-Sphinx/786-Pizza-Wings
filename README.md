@@ -38,6 +38,9 @@ npm run admin:create -- you@example.com "Your Name" owner   # asks for a passwor
 npm run dev                     # terminal 2: http://localhost:3000, staff at /admin
 ```
 
+If `npm run dev:db` says the port can't be used (on Windows, Hyper-V/WSL can reserve port ranges),
+set `DEV_DB_PORT` to a free port, e.g. 15432, and use the same port in `DATABASE_URL`.
+
 Before pushing, run what CI runs: `npm run check` (typegen, tsc, lint, tests, build).
 
 ## How ordering works
