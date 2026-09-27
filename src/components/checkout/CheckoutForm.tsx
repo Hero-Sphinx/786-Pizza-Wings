@@ -351,6 +351,12 @@ export function CheckoutForm({ asapOpen, slots }: { asapOpen: boolean; slots: Re
             {formError}
           </p>
         )}
+        {/* Without this, the button below is just greyed out, and on a phone the time picker is far above it. */}
+        {!when && slotList.length > 0 && (
+          <p className="mt-3 rounded-xl bg-gold-100 p-3 text-sm font-semibold text-gold-700">
+            Choose a {effectiveFulfilment} time in step 2 to place your order.
+          </p>
+        )}
         <button type="submit" className="btn btn-primary mt-5 w-full text-lg" disabled={submitting || !shown || shown.errors.length > 0 || !when}>
           {submitting ? "Placing order…" : shown ? `Place order · ${formatCents(shown.totalCents)}` : "Checking prices…"}
         </button>
