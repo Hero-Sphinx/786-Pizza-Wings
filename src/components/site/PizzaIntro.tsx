@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+import { INTRO_SEEN_COOKIE } from "@/lib/routes";
 
 // Opening animation: a whole pizza lands on a plate, every slice is pulled away at once,
 // revealing the logo on the plate, then the site. Pure CSS (see .intro-* in globals.css), so it
@@ -42,6 +43,13 @@ export function PizzaIntro() {
   const pathname = usePathname();
   // Decided once, on the first page of the visit; client-side navigation never replays it.
   const [show, setShow] = useState(() => LANDING_PAGES.includes(pathname));
+
+  useEffect(() => {
+    // A session cookie (no expiry), so reloads and new tabs skip it until the browser is closed.
+    // The site layout reads it on the server, because the animation starts before JavaScript runs.
+    if (show) document.cookie = `${INTRO_SEEN_COOKIE}=1; path=/; SameSite=Lax`;
+  }, [show]);
+
   if (!show) return null;
 
   return (
