@@ -78,7 +78,7 @@ export function HeroCarousel({ promos }: { promos: Promo[] }) {
                   src={p.image}
                   alt=""
                   fill
-                  priority={i === 0}
+                  preload={i === 0}
                   sizes="(min-width: 768px) 448px, 320px"
                   className="rounded-full object-cover ring-8 ring-white/10"
                 />
