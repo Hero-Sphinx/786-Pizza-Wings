@@ -31,7 +31,7 @@ function PriceLadder({ item }: { item: MenuItem }) {
   );
 }
 
-function ItemCard({ item, onOpen }: { item: MenuItem; onOpen: () => void }) {
+function ItemCard({ item, onOpen, eager = false }: { item: MenuItem; onOpen: () => void; eager?: boolean }) {
   const { add } = useCart();
   const quickAdd = item.kind === "simple" && item.variants.length === 1;
   const soldOut = !item.available || item.variants.every((v) => !v.available);
@@ -41,7 +41,7 @@ function ItemCard({ item, onOpen }: { item: MenuItem; onOpen: () => void }) {
     <article className="card flex overflow-hidden sm:flex-col">
       {item.image && (
         <div className="relative w-32 shrink-0 bg-crust sm:aspect-[4/3] sm:w-full">
-          <Image src={item.image} alt="" fill sizes="(min-width: 640px) 33vw, 128px" className="object-cover" />
+          <Image src={item.image} alt="" fill sizes="(min-width: 640px) 33vw, 128px" loading={eager ? "eager" : "lazy"} className="object-cover" />
           {item.badge && (
             <span className="absolute left-2 top-2 rounded-full bg-tomato-600 px-2.5 py-0.5 text-xs font-bold text-white shadow">{item.badge}</span>
           )}
@@ -126,15 +126,16 @@ export function MenuBrowser() {
       </nav>
 
       <div className="container-page space-y-14 py-8">
-        {menu.categories.map((c) => (
+        {menu.categories.map((c, ci) => (
           <section key={c.slug} id={c.slug} aria-labelledby={`${c.slug}-title`} className="scroll-mt-40">
             <h2 id={`${c.slug}-title`} className="h-display text-3xl sm:text-4xl">
               {c.name}
             </h2>
             {c.blurb && <p className="mt-1 text-ink-soft">{c.blurb}</p>}
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {c.items.map((item) => (
-                <ItemCard key={item.slug} item={item} onOpen={() => setOpen(item)} />
+              {c.items.map((item, ii) => (
+                // The first row is on screen at load, so it shouldn't wait for lazy loading.
+                <ItemCard key={item.slug} item={item} onOpen={() => setOpen(item)} eager={ci === 0 && ii < 3} />
               ))}
             </div>
 
