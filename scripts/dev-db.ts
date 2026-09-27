@@ -8,6 +8,8 @@ import EmbeddedPostgres from "embedded-postgres";
 
 const PORT = Number(process.env.DEV_DB_PORT ?? 54329);
 const dir = path.resolve(import.meta.dirname, "..", ".dev-db");
+// Postgres's own output, kept only to explain a failed start.
+const pgLog: string[] = [];
 
 async function main() {
   const pg = new EmbeddedPostgres({
@@ -18,7 +20,10 @@ async function main() {
     persistent: true,
     // Match production (Neon): UTF-8, not the Windows code page.
     initdbFlags: ["--encoding=UTF8", "--locale=C"],
-    onLog: () => {},
+    onLog: (m) => {
+      pgLog.push(String(m));
+      if (pgLog.length > 200) pgLog.shift();
+    },
   });
   if (!existsSync(path.join(dir, "PG_VERSION"))) await pg.initialise();
   await pg.start();
@@ -38,6 +43,16 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(err);
+  // A failed start often rejects with no error at all; the reason is in the Postgres log.
+  if (err) console.error(err);
+  const reasons = pgLog.join("\n").split("\n").filter((l) => /FATAL|ERROR|could not/.test(l));
+  if (reasons.length) console.error(reasons.join("\n"));
+  if (reasons.some((l) => /could not (bind|create any TCP)/.test(l))) {
+    console.error(
+      `\nPort ${PORT} can't be used. On Windows it may sit in a range reserved by Hyper-V/WSL ` +
+        `(see: netsh interface ipv4 show excludedportrange protocol=tcp). Set DEV_DB_PORT to a free port ` +
+        `(e.g. 15432) and use the same port in DATABASE_URL.`,
+    );
+  }
   process.exit(1);
 });
