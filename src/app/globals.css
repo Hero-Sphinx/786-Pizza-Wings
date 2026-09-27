@@ -1,0 +1,235 @@
+@import "tailwindcss";
+
+/* Brand tokens, taken from the 786 logo: emerald green, warm gold, tomato red, on cream. */
+@theme {
+  --color-brand-50: #eefaf2;
+  --color-brand-100: #d5f2de;
+  --color-brand-200: #a9e3bd;
+  --color-brand-500: #1d9a52;
+  --color-brand-600: #148043;
+  --color-brand-700: #0f6837;
+  --color-brand-800: #0c522c;
+  --color-brand-900: #093d21;
+
+  --color-gold-100: #fff3cf;
+  --color-gold-300: #ffd76a;
+  --color-gold-400: #fcc72b;
+  --color-gold-500: #f0b010;
+  --color-gold-700: #8a5f00;
+
+  --color-tomato-50: #fff1f0;
+  --color-tomato-500: #e0413a;
+  --color-tomato-600: #c42f29;
+  --color-tomato-700: #a1231e;
+
+  --color-ink: #1f1a17;
+  --color-ink-soft: #5b524c;
+  --color-cream: #fffaf1;
+  --color-crust: #f6ead6;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-baloo), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-card: 0 1px 2px rgb(31 26 23 / 0.06), 0 6px 20px -8px rgb(31 26 23 / 0.18);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-padding-top: 8rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Room for the fixed mobile action bar. */
+@media (max-width: 767px) {
+  body.has-mobile-bar {
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+::selection {
+  background: var(--color-gold-300);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-gold-400);
+  outline-offset: 2px;
+}
+
+/* Native <dialog> as a bottom sheet on phones, centred card on larger screens. */
+dialog.sheet {
+  margin: auto auto 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 92dvh;
+  border-radius: 1.25rem 1.25rem 0 0;
+  padding: 0;
+  border: 0;
+  background: #fff;
+  color: var(--color-ink);
+  /* Only the sheet body scrolls; the sheet itself never does. */
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+dialog.sheet::backdrop {
+  background: rgb(20 16 12 / 0.55);
+}
+@media (min-width: 640px) {
+  dialog.sheet {
+    margin: auto;
+    max-width: 36rem;
+    max-height: 88dvh;
+    border-radius: 1.25rem;
+  }
+}
+dialog.sheet[open] {
+  animation: sheet-in 0.22s ease-out;
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+/* Opening animation (src/components/site/PizzaIntro.tsx). Timeline, 1.8 s total:
+   0–0.45 s pizza spins onto the plate · 0.5 s every slice is grabbed at once ·
+   0.6–1.4 s slices fly off, revealing the logo · 1.3–1.8 s fade into the site. */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  cursor: pointer;
+  background: radial-gradient(circle at 50% 45%, var(--color-brand-700), var(--color-brand-900) 70%);
+  animation: intro-out 1.8s ease-in forwards;
+}
+.intro-pizza {
+  width: min(80vmin, 440px);
+  height: auto;
+  overflow: visible;
+  animation: intro-land 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+.intro-slice {
+  transform-origin: 200px 200px;
+  animation: intro-pull calc(1s * var(--s, 1)) cubic-bezier(0.5, 0, 0.75, 0.3) 0.45s both;
+}
+.intro-logo {
+  animation: intro-logo 1.8s ease-out both;
+}
+@keyframes intro-land {
+  from {
+    transform: scale(0.55) rotate(-50deg);
+    opacity: 0;
+  }
+}
+@keyframes intro-pull {
+  0% {
+    transform: none;
+  }
+  /* the grab: every slice tugs outward a little */
+  18% {
+    transform: translate(calc(cos(var(--a)) * 12px), calc(sin(var(--a)) * 12px));
+  }
+  /* the pull: away in every direction with a twist */
+  100% {
+    transform: translate(calc(cos(var(--a)) * 900px), calc(sin(var(--a)) * 900px)) rotate(var(--r));
+  }
+}
+@keyframes intro-logo {
+  0%,
+  40% {
+    opacity: 0;
+    transform: scale(0.85);
+    transform-origin: 200px 200px;
+  }
+  65%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    transform-origin: 200px 200px;
+  }
+}
+@keyframes intro-out {
+  0%,
+  72% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    display: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-base font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800;
+  }
+  .btn-gold {
+    @apply bg-gold-400 text-ink hover:bg-gold-300;
+  }
+  .btn-outline {
+    @apply border-2 border-brand-600 bg-white text-brand-700 hover:bg-brand-50;
+  }
+  .btn-ghost {
+    @apply text-brand-700 hover:bg-brand-50;
+  }
+  .btn-danger {
+    @apply bg-tomato-600 text-white hover:bg-tomato-700;
+  }
+  .card {
+    @apply rounded-2xl bg-white shadow-(--shadow-card);
+  }
+  .field {
+    @apply block w-full min-h-11 rounded-xl border border-ink/20 bg-white px-3 py-2 text-base text-ink placeholder:text-ink-soft/70 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-200;
+  }
+  .label {
+    @apply mb-1 block text-sm font-semibold text-ink;
+  }
+  .chip {
+    /* relative: keeps the visually-hidden input inside the chip, so focusing it never scrolls the page or dialog. */
+    @apply relative inline-flex min-h-10 items-center gap-1.5 rounded-full border border-ink/15 bg-white px-3.5 text-sm font-medium text-ink transition-colors;
+  }
+  .chip[aria-pressed="true"],
+  .chip[aria-current="true"],
+  .chip[aria-checked="true"],
+  .chip:has(input:checked) {
+    @apply border-brand-600 bg-brand-600 text-white;
+  }
+  .chip:has(input:disabled) {
+    @apply cursor-not-allowed opacity-45;
+  }
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+  .h-display {
+    @apply font-display font-extrabold tracking-tight;
+  }
+}

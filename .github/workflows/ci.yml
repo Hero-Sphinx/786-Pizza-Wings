@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: App checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Dependency audit (fails on high or critical)
+        run: npm audit --audit-level=high
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Tests (unit + architecture rules)
+        run: npm test
+      - name: Build
+        run: npm run build
+        env:
+          # The build needs no database (every data page is dynamic); this only satisfies config loading.
+          DATABASE_URL: postgresql://placeholder@localhost:5432/placeholder
+
+  database:
+    name: Database schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pizza
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pizza
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply schema.sql and every migration
+        run: npm run db:apply
+      - name: Re-apply migrations (must be idempotent)
+        run: npm run db:apply -- --migrations-only
+      - name: Prisma schema matches the database
+        run: npx tsx scripts/check-schema-drift.ts
+      - name: Seed
+        run: npm run db:seed
+      - name: Seed again (must be idempotent)
+        run: npm run db:seed | tee seed2.log && grep -q "0 inserted, 0 updated" seed2.log
+      - name: Reset-menu seed runs cleanly
+        run: npm run db:seed -- --reset-menu

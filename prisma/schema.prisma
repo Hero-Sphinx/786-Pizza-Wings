@@ -1,0 +1,303 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model admin_sessions {
+  token_hash    String      @id
+  admin_user_id String      @db.Uuid
+  created_at    DateTime    @default(now()) @db.Timestamptz(6)
+  expires_at    DateTime    @db.Timestamptz(6)
+  user_agent    String?
+  admin_users   admin_users @relation(fields: [admin_user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expires_at], map: "admin_sessions_expiry_idx")
+  @@index([admin_user_id], map: "admin_sessions_user_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model admin_users {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String           @unique
+  display_name   String
+  password_hash  String
+  role           admin_role       @default(staff)
+  is_active      Boolean          @default(true)
+  failed_logins  Int              @default(0)
+  locked_until   DateTime?        @db.Timestamptz(6)
+  last_login_at  DateTime?        @db.Timestamptz(6)
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  admin_sessions admin_sessions[]
+  audit_log      audit_log[]
+  order_events   order_events[]
+}
+
+model audit_log {
+  id            BigInt       @id @default(autoincrement())
+  admin_user_id String?      @db.Uuid
+  action        String
+  entity        String
+  entity_id     String?
+  detail        Json?
+  created_at    DateTime     @default(now()) @db.Timestamptz(6)
+  admin_users   admin_users? @relation(fields: [admin_user_id], references: [id], onUpdate: NoAction)
+
+  @@index([created_at(sort: Desc)], map: "audit_log_created_idx")
+}
+
+model categories {
+  slug       String       @id
+  name       String
+  blurb      String?
+  sort_order Int          @default(0)
+  is_visible Boolean      @default(true)
+  menu_items menu_items[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model item_variants {
+  item_slug    String
+  code         String
+  label        String
+  price_cents  Int
+  pizza_size   String?
+  wing_count   Int?         @db.SmallInt
+  max_flavours Int?         @db.SmallInt
+  is_available Boolean      @default(true)
+  sort_order   Int          @default(0)
+  menu_items   menu_items   @relation(fields: [item_slug], references: [slug], onDelete: Cascade)
+  pizza_sizes  pizza_sizes? @relation(fields: [pizza_size], references: [code], onDelete: NoAction)
+
+  @@id([item_slug, code])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model menu_items {
+  slug                   String          @id
+  category_slug          String
+  kind                   item_kind
+  name                   String
+  description            String?
+  image                  String?
+  standard_toppings      String[]        @default([])
+  included_topping_units Int             @default(0) @db.SmallInt
+  deal_config            Json?
+  tax_mode               tax_mode        @default(standard)
+  cash_only              Boolean         @default(false)
+  pickup_only            Boolean         @default(false)
+  available_days         Int[]           @default([]) @db.SmallInt
+  badge                  String?
+  is_available           Boolean         @default(true)
+  is_visible             Boolean         @default(true)
+  sort_order             Int             @default(0)
+  updated_at             DateTime        @default(now()) @db.Timestamptz(6)
+  item_variants          item_variants[]
+  categories             categories      @relation(fields: [category_slug], references: [slug], onDelete: NoAction)
+  order_items            order_items[]
+
+  @@index([category_slug, sort_order], map: "menu_items_category_idx")
+}
+
+model order_events {
+  id            BigInt       @id @default(autoincrement())
+  order_id      String       @db.Uuid
+  status        order_status
+  admin_user_id String?      @db.Uuid
+  note          String?
+  created_at    DateTime     @default(now()) @db.Timestamptz(6)
+  admin_users   admin_users? @relation(fields: [admin_user_id], references: [id], onUpdate: NoAction)
+  orders        orders       @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([order_id, created_at], map: "order_events_order_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model order_items {
+  id               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id         String      @db.Uuid
+  position         Int         @db.SmallInt
+  item_slug        String?
+  item_name        String
+  variant_label    String?
+  quantity         Int         @db.SmallInt
+  unit_price_cents Int
+  line_total_cents Int
+  tax_mode         tax_mode
+  details          String[]    @default([])
+  selection        Json
+  notes            String?
+  menu_items       menu_items? @relation(fields: [item_slug], references: [slug])
+  orders           orders      @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([order_id, position])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orders {
+  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_number        Int            @unique @default(autoincrement())
+  public_token        String         @unique
+  idempotency_key     String         @unique
+  status              order_status   @default(new)
+  fulfilment          fulfilment
+  payment_method      payment_method
+  customer_name       String
+  customer_phone      String
+  customer_email      String?
+  address_line        String?
+  address_unit        String?
+  address_city        String?
+  address_postal_code String?
+  address_notes       String?
+  notes               String?
+  scheduled_for       DateTime?      @db.Timestamptz(6)
+  subtotal_cents      Int
+  delivery_fee_cents  Int            @default(0)
+  tax_cents           Int
+  total_cents         Int
+  client_ip_hash      String?
+  cancel_reason       String?
+  created_at          DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime       @default(now()) @db.Timestamptz(6)
+  order_events        order_events[]
+  order_items         order_items[]
+
+  @@index([created_at(sort: Desc)], map: "orders_created_idx")
+  @@index([status, created_at(sort: Desc)], map: "orders_status_created_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pizza_sizes {
+  code                String          @id
+  label               String
+  inches              Int?            @db.SmallInt
+  sort_order          Int             @default(0)
+  extra_topping_cents Int?
+  item_variants       item_variants[]
+}
+
+model promos {
+  slug       String  @id
+  eyebrow    String?
+  title      String
+  body       String?
+  price_text String?
+  image      String
+  cta_label  String?
+  cta_href   String?
+  is_active  Boolean @default(true)
+  sort_order Int     @default(0)
+}
+
+model rate_limits {
+  bucket       String
+  window_start DateTime @db.Timestamptz(6)
+  hits         Int      @default(0)
+
+  @@id([bucket, window_start])
+  @@index([window_start], map: "rate_limits_window_idx")
+}
+
+model store_closures {
+  closed_on DateTime @id @db.Date
+  reason    String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_hours {
+  day_of_week Int      @id @db.SmallInt
+  is_closed   Boolean  @default(false)
+  opens_at    DateTime @db.Time(6)
+  closes_at   DateTime @db.Time(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_settings {
+  id                       Int      @id @default(1) @db.SmallInt
+  name                     String
+  phone                    String
+  address_line             String
+  city                     String
+  province                 String
+  postal_code              String
+  landmark                 String?
+  timezone                 String   @default("America/Toronto")
+  ordering_enabled         Boolean  @default(true)
+  ordering_paused_message  String?
+  delivery_enabled         Boolean  @default(true)
+  delivery_fee_cents       Int      @default(0)
+  delivery_min_cents       Int?
+  delivery_fsas            String[] @default([])
+  tax_rate_bps             Int      @default(1300)
+  small_order_tax_rate_bps Int      @default(500)
+  small_order_max_cents    Int      @default(400)
+  pickup_lead_minutes      Int      @default(20)
+  delivery_lead_minutes    Int      @default(45)
+  last_order_minutes       Int      @default(15)
+  max_order_cents          Int      @default(50000)
+  notify_email             String?
+  updated_at               DateTime @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model toppings {
+  slug          String        @id
+  name          String
+  topping_group topping_group
+  units         Int           @default(1) @db.SmallInt
+  is_available  Boolean       @default(true)
+  sort_order    Int           @default(0)
+}
+
+model wing_flavours {
+  slug         String  @id
+  name         String
+  is_available Boolean @default(true)
+  sort_order   Int     @default(0)
+}
+
+enum admin_role {
+  owner
+  staff
+}
+
+enum fulfilment {
+  pickup
+  delivery
+}
+
+enum item_kind {
+  pizza
+  wings
+  simple
+  deal
+}
+
+enum order_status {
+  new
+  accepted
+  ready
+  out_for_delivery
+  completed
+  cancelled
+}
+
+enum payment_method {
+  cash
+  card_in_person
+}
+
+enum tax_mode {
+  standard
+  included
+  exempt
+}
+
+enum topping_group {
+  veg
+  meat
+}
