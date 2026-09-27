@@ -19,3 +19,5 @@ export const PUBLIC_API_ROUTES = [
 
 export const ADMIN_LOGIN_PATH = "/admin/login";
 export const SESSION_COOKIE = "pw_session";
+/** Set once the opening animation has played, for the rest of the browser session. */
+export const INTRO_SEEN_COOKIE = "pw_intro_seen";
