@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { formatPhone, telHref } from "@/lib/format";
 import { formatDayLabel, formatTime } from "@/lib/hours";
 import { formatCents } from "@/lib/money";
+import { rememberOrder } from "@/lib/recent-orders";
 import { ACTIVE_STATUSES, STATUS_LABEL, type OrderStatus } from "@/lib/order-status";
 import type { PublicOrder } from "@/lib/api-types";
 import { CheckIcon } from "../icons";
@@ -18,6 +19,9 @@ export function OrderStatusView({ token, initial, timezone }: { token: string; i
   const { store } = useCart();
   const [order, setOrder] = useState(initial);
   const active = ACTIVE_STATUSES.includes(order.status);
+
+  // Remember it on this device (also covers customers arriving from the email link).
+  useEffect(() => rememberOrder({ token, orderNumber: initial.orderNumber }), [token, initial.orderNumber]);
 
   useEffect(() => {
     if (!active) return;
@@ -124,7 +128,13 @@ export function OrderStatusView({ token, initial, timezone }: { token: string; i
           Back to the menu
         </Link>
       </div>
-      <p className="text-center text-sm text-ink-soft">Bookmark this page to check on your order. It updates by itself.</p>
+      <p className="text-center text-sm text-ink-soft">
+        This page updates by itself. Closed it? Go to{" "}
+        <Link href="/track" className="font-semibold text-brand-700 underline">
+          Track order
+        </Link>{" "}
+        and enter order <span className="font-semibold">#{order.orderNumber}</span> with your phone number.
+      </p>
     </div>
   );
 }

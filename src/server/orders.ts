@@ -212,3 +212,19 @@ export async function updateOrderStatus(orderId: string, to: OrderStatus, adminU
     await tx.order_events.create({ data: { order_id: orderId, status: to, admin_user_id: adminUserId, note: note ?? null } });
   });
 }
+
+/** Orders can be looked up by number + phone for this long after they're placed. */
+const LOOKUP_WINDOW_DAYS = 30;
+
+/** The status-page token for an order, only if the phone matches. Same answer for "no such order" and "wrong phone". */
+export async function findOrderToken(orderNumber: number, phone: string): Promise<string | null> {
+  const order = await db().orders.findFirst({
+    where: {
+      order_number: orderNumber,
+      customer_phone: phone,
+      created_at: { gte: new Date(Date.now() - LOOKUP_WINDOW_DAYS * 86_400_000) },
+    },
+    select: { public_token: true },
+  });
+  return order?.public_token ?? null;
+}

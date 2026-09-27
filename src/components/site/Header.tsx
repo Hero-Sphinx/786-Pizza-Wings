@@ -10,6 +10,7 @@ const NAV = [
   { href: "/", label: "Home" },
   { href: "/menu", label: "Menu" },
   { href: "/about", label: "About us" },
+  { href: "/track", label: "Track order" },
 ];
 
 export function Header({ store }: { store: StoreInfo }) {
@@ -21,18 +22,18 @@ export function Header({ store }: { store: StoreInfo }) {
           <p className="flex items-center gap-1.5 font-medium">
             <ShieldIcon width={16} height={16} className="text-gold-400" />
             <span>
-              <span className="sm:hidden">HMA-certified halal</span>
-              <span className="hidden sm:inline">Our meat products are HMA certified · Halal/Zabiha</span>
+              <span className="xl:hidden">HMA-certified halal</span>
+              <span className="hidden xl:inline">Our meat products are HMA certified · Halal/Zabiha</span>
             </span>
           </p>
-          <div className="hidden items-center gap-5 md:flex">
+          <div className="hidden items-center gap-5 whitespace-nowrap lg:flex">
             <a href={mapsHref(`786 Pizza & Wings, ${fullAddress}`)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-gold-300">
               <PinIcon width={16} height={16} />
               {store.addressLine}, {store.city}
             </a>
             <OpenStatus hours={store.hours} />
           </div>
-          <a href={telHref(store.phone)} className="flex items-center gap-1.5 font-semibold hover:text-gold-300">
+          <a href={telHref(store.phone)} className="flex items-center gap-1.5 whitespace-nowrap font-semibold hover:text-gold-300">
             <PhoneIcon width={16} height={16} />
             {formatPhone(store.phone)}
           </a>
@@ -49,7 +50,7 @@ export function Header({ store }: { store: StoreInfo }) {
             </span>
           </Link>
 
-          <nav aria-label="Main" className="ml-auto hidden items-center gap-1 md:flex">
+          <nav aria-label="Main" className="ml-auto hidden items-center gap-1 whitespace-nowrap lg:flex">
             {NAV.map((n) => (
               <Link key={n.href} href={n.href} className="rounded-full px-4 py-2 font-semibold text-ink hover:bg-brand-50 hover:text-brand-700">
                 {n.label}
@@ -57,12 +58,12 @@ export function Header({ store }: { store: StoreInfo }) {
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2 md:ml-2">
-            <Link href="/menu" className="btn btn-gold hidden sm:inline-flex">
+          <div className="ml-auto flex items-center gap-2 lg:ml-2">
+            <Link href="/menu" className="btn btn-gold hidden whitespace-nowrap sm:inline-flex">
               Order online
             </Link>
             <CartButton />
-            <details className="relative md:hidden">
+            <details className="relative lg:hidden">
               <summary className="btn btn-ghost list-none px-3 [&::-webkit-details-marker]:hidden" aria-label="More pages">
                 <MenuIcon />
               </summary>

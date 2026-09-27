@@ -44,7 +44,7 @@ const postal = z
   .transform((v) => `${v.slice(0, 3)} ${v.slice(3)}`);
 
 // North American number; stored as 10 digits.
-const phone = z
+export const phoneSchema = z
   .string()
   .trim()
   .transform((v) => v.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, ""))
@@ -77,7 +77,7 @@ export const checkoutSchema = z
     customer: z
       .object({
         name: z.string().trim().min(2, "Enter your name").max(80),
-        phone,
+        phone: phoneSchema,
         email: z
           .string()
           .trim()
@@ -108,5 +108,18 @@ export const quoteSchema = z
     paymentMethod: paymentMethodSchema.optional(),
     scheduledFor: z.iso.datetime({ offset: true }).optional(),
     postalCode: z.string().max(10).optional(),
+  })
+  .strict();
+
+/** "Track my order": both must match the order, so order numbers alone reveal nothing. */
+export const orderLookupSchema = z
+  .object({
+    // Accepts "1037", "#1037" or 1037.
+    orderNumber: z
+      .union([z.string(), z.number()])
+      .transform((v) => String(v).replace(/[#\s]/g, ""))
+      .pipe(z.string().regex(/^\d{1,7}$/, "Enter your order number, e.g. 1037"))
+      .transform(Number),
+    phone: phoneSchema,
   })
   .strict();

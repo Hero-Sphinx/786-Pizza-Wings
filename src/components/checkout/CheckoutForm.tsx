@@ -7,6 +7,7 @@ import type { ApiErrorBody, CreateOrderResponse, QuoteResponse } from "@/lib/api
 import type { Fulfilment, PaymentMethod } from "@/lib/cart-schema";
 import { formatPhone, telHref } from "@/lib/format";
 import { formatCents } from "@/lib/money";
+import { rememberOrder } from "@/lib/recent-orders";
 import { useCart } from "../cart/CartProvider";
 
 export type Slot = { iso: string; day: string; time: string };
@@ -142,7 +143,8 @@ export function CheckoutForm({ asapOpen, slots }: { asapOpen: boolean; slots: Re
         setSubmitting(false);
         return;
       }
-      const { token } = (await res.json()) as CreateOrderResponse;
+      const { token, orderNumber } = (await res.json()) as CreateOrderResponse;
+      rememberOrder({ token, orderNumber });
       clear();
       router.push(`/order/${token}`);
     } catch {

@@ -2,7 +2,7 @@
 // architecture tests: adding a public page or API route means adding it here, in review.
 
 /** Pages that don't need a staff session. Everything under /admin except the login page is private. */
-export const PUBLIC_PAGES = ["/", "/menu", "/about", "/privacy", "/checkout", "/order/[token]", "/admin/login"] as const;
+export const PUBLIC_PAGES = ["/", "/menu", "/about", "/privacy", "/checkout", "/track", "/order/[token]", "/admin/login"] as const;
 
 /**
  * API routes that use withPublic() instead of withAuth(). Each one must rate-limit.
@@ -13,6 +13,7 @@ export const PUBLIC_API_ROUTES = [
   "/api/quote",
   "/api/orders",
   "/api/orders/[token]",
+  "/api/orders/lookup",
   "/api/admin/login",
 ] as const;
 

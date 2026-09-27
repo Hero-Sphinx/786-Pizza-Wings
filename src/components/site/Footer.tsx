@@ -66,6 +66,7 @@ export function Footer({ store, showMap = true }: { store: StoreInfo; showMap?: 
           <nav aria-label="Footer" className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-white/80">
             <Link href="/menu" className="hover:text-gold-300">Menu</Link>
             <Link href="/about" className="hover:text-gold-300">About us</Link>
+            <Link href="/track" className="hover:text-gold-300">Track your order</Link>
             <Link href="/privacy" className="hover:text-gold-300">Privacy</Link>
           </nav>
         </div>
