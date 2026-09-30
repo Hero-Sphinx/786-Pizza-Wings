@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import type { ApiErrorBody } from "@/lib/api-types";
+import { staffErrorMessage } from "@/lib/staff-errors";
 
 export function LoginForm() {
   const router = useRouter();
@@ -22,8 +22,7 @@ export function LoginForm() {
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({ error: "Sign in failed" }))) as ApiErrorBody;
-        setError(body.error);
+        setError(await staffErrorMessage(res, "Sign in failed"));
         setBusy(false);
         return;
       }
