@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { ApiErrorBody } from "@/lib/api-types";
+import { staffErrorMessage } from "@/lib/staff-errors";
 
 /** PATCH helper for admin screens: tracks busy/error state and refreshes server data on success. */
 export function useAdminApi() {
@@ -22,8 +22,7 @@ export function useAdminApi() {
         return false;
       }
       if (!res.ok) {
-        const b = (await res.json().catch(() => ({ error: "Save failed" }))) as ApiErrorBody;
-        setError(b.error);
+        setError(await staffErrorMessage(res, "Save failed"));
         return false;
       }
       setSaved(successMessage);
