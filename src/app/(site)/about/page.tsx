@@ -22,7 +22,7 @@ export default async function AboutPage() {
   return (
     <>
       <section className="relative overflow-hidden bg-ink text-white">
-        <Image src="/images/banners/pizza.webp" alt="" fill priority sizes="100vw" className="object-cover opacity-40" />
+        <Image src="/images/banners/pizza.webp" alt="" fill preload sizes="100vw" className="object-cover opacity-40" />
         <div className="container-page relative py-16 sm:py-24">
           <p className="font-display text-xl font-bold text-gold-400">Welcome to 786 Pizza &amp; Wings</p>
           <h1 className="h-display mt-2 max-w-2xl text-4xl leading-tight sm:text-6xl">The quality pizza &amp; best wings in town!</h1>
