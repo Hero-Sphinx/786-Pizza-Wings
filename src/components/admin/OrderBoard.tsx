@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AdminOrder } from "@/lib/admin-types";
-import type { ApiErrorBody } from "@/lib/api-types";
 import { formatPhone, telHref } from "@/lib/format";
 import { formatDayLabel, formatTime } from "@/lib/hours";
 import { formatCents } from "@/lib/money";
 import { ACTION_LABEL, STATUS_LABEL, allowedTransitions, type OrderStatus } from "@/lib/order-status";
+import { staffErrorMessage } from "@/lib/staff-errors";
 
 const POLL_MS = 8000;
 const SOUND_KEY = "786-admin-sound";
@@ -278,8 +278,7 @@ export function OrderBoard({ initial, timezone, orderingEnabled }: { initial: Ad
         body: JSON.stringify({ status: to, note }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({ error: "Update failed" }))) as ApiErrorBody;
-        setError(`#${o.orderNumber}: ${body.error}`);
+        setError(`#${o.orderNumber}: ${await staffErrorMessage(res, "Update failed")}`);
       }
     } catch {
       setError("Can't reach the server. Check the connection.");
