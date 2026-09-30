@@ -100,6 +100,28 @@ dialog.sheet[open] {
   }
 }
 
+/* Order receipt (src/components/admin/ReceiptTicket.tsx), printed on 80mm thermal paper. The paper
+   size comes from the printer's roll setting; the named page keeps the zero margin off every other
+   printed page. */
+@page receipt {
+  margin: 0;
+}
+@media print {
+  .receipt {
+    page: receipt;
+    padding: 4mm 0;
+  }
+  /* Browsers drop background colours when printing unless told otherwise. */
+  .receipt-ink {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Thermal heads print black only: a hard black-and-white logo beats a muddy dither. */
+  .receipt-logo {
+    filter: grayscale(1) contrast(1.6);
+  }
+}
+
 /* Opening animation (src/components/site/PizzaIntro.tsx). Timeline, 1.8 s total:
    0–0.45 s pizza spins onto the plate · 0.5 s every slice is grabbed at once ·
    0.6–1.4 s slices fly off, revealing the logo · 1.3–1.8 s fade into the site. */
