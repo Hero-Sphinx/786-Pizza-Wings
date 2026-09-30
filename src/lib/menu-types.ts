@@ -77,6 +77,8 @@ export type MenuItem = {
   availableDays: number[];
   badge: string | null;
   available: boolean;
+  /** False only for items hidden from the website (the admin editor still loads them). */
+  visible: boolean;
   variants: Variant[];
 };
 
