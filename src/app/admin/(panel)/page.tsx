@@ -10,5 +10,13 @@ export const metadata: Metadata = { title: "Orders" };
 export default async function OrdersPage() {
   await requireAdmin();
   const [orders, store] = await Promise.all([listOrders("active"), loadStoreFresh()]);
-  return <OrderBoard initial={orders.map(toAdminOrder)} timezone={store.hours.timezone} orderingEnabled={store.orderingEnabled} />;
+  const { name, phone, addressLine, city, province, postalCode } = store;
+  return (
+    <OrderBoard
+      initial={orders.map(toAdminOrder)}
+      store={{ name, phone, addressLine, city, province, postalCode }}
+      timezone={store.hours.timezone}
+      orderingEnabled={store.orderingEnabled}
+    />
+  );
 }
