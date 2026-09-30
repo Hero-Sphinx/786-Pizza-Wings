@@ -15,7 +15,9 @@ export function proxy(req: NextRequest) {
   const csp = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${dev ? " 'unsafe-eval'" : ""}`,
-    `style-src 'self' 'nonce-${nonce}'`,
+    // The dev overlay injects <style> tags without the nonce, so dev allows inline styles (as the Next CSP
+    // guide does). A nonce makes browsers ignore 'unsafe-inline', so dev leaves it out. Production is unchanged.
+    `style-src 'self' ${dev ? "'unsafe-inline'" : `'nonce-${nonce}'`}`,
     // React style={{...}} attributes (e.g. progress bars) are harmless and need this.
     "style-src-attr 'unsafe-inline'",
     "img-src 'self' data: blob:",
