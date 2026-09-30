@@ -73,6 +73,7 @@ export async function loadMenuFresh(opts: { includeHidden?: boolean } = {}): Pro
           availableDays: i.available_days,
           badge: i.badge,
           available: i.is_available && (i.kind !== "deal" || dealConfigSchema.safeParse(i.deal_config).success),
+          visible: i.is_visible,
           variants: i.item_variants.map((v) => ({
             code: v.code,
             label: v.label,
