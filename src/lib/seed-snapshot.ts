@@ -40,6 +40,7 @@ export function seedSnapshot(pricing: Partial<PricingSettings> = {}): MenuSnapsh
           availableDays: i.availableDays ?? [],
           badge: i.badge ?? null,
           available: true,
+          visible: true,
           variants: i.variants.map((v) => ({
             code: v.code,
             label: v.label,
