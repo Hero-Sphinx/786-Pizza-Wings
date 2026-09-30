@@ -9,6 +9,7 @@ import { formatDayLabel, formatTime } from "@/lib/hours";
 import { formatCents } from "@/lib/money";
 import { ACTION_LABEL, STATUS_LABEL, allowedTransitions, type OrderStatus } from "@/lib/order-status";
 import { staffErrorMessage } from "@/lib/staff-errors";
+import { ReceiptTicket, type ReceiptStore } from "./ReceiptTicket";
 
 const POLL_MS = 8000;
 const SOUND_KEY = "786-admin-sound";
@@ -144,48 +145,17 @@ function OrderCard({
   );
 }
 
-function Ticket({ order, timezone }: { order: AdminOrder; timezone: string }) {
-  const due = order.scheduledFor ? new Date(order.scheduledFor) : null;
-  return (
-    <div className="hidden font-mono text-sm print:block">
-      <p className="text-center text-lg font-bold">786 PIZZA &amp; WINGS</p>
-      <p className="text-center text-2xl font-bold">
-        #{order.orderNumber} {order.fulfilment.toUpperCase()}
-      </p>
-      <p>{due ? `FOR: ${formatDayLabel(due, new Date(), timezone)} ${formatTime(due, timezone)}` : "ASAP"}</p>
-      <p>Placed: {formatTime(new Date(order.createdAt), timezone)}</p>
-      <p>
-        {order.customerName} {formatPhone(order.customerPhone)}
-      </p>
-      {order.address && (
-        <p>
-          {[order.address.unit, order.address.line].filter(Boolean).join("-")}, {order.address.city} {order.address.postalCode} {order.address.notes}
-        </p>
-      )}
-      <hr className="my-2 border-dashed border-black" />
-      {order.items.map((i, idx) => (
-        <div key={idx} className="mb-1">
-          <p className="font-bold">
-            {i.quantity}x {i.name} {i.variant ? `(${i.variant})` : ""}
-          </p>
-          {i.details.map((d) => (
-            <p key={d}>  - {d}</p>
-          ))}
-          {i.notes && <p>  NOTE: {i.notes}</p>}
-        </div>
-      ))}
-      {order.notes && <p className="mt-1 font-bold">ORDER NOTE: {order.notes}</p>}
-      <hr className="my-2 border-dashed border-black" />
-      <p>Subtotal {formatCents(order.subtotalCents)}</p>
-      {order.deliveryFeeCents > 0 && <p>Delivery {formatCents(order.deliveryFeeCents)}</p>}
-      <p>HST {formatCents(order.taxCents)}</p>
-      <p className="text-lg font-bold">TOTAL {formatCents(order.totalCents)}</p>
-      <p>PAY: {order.paymentMethod === "cash" ? "CASH" : "CARD"}</p>
-    </div>
-  );
-}
-
-export function OrderBoard({ initial, timezone, orderingEnabled }: { initial: AdminOrder[]; timezone: string; orderingEnabled: boolean }) {
+export function OrderBoard({
+  initial,
+  store,
+  timezone,
+  orderingEnabled,
+}: {
+  initial: AdminOrder[];
+  store: ReceiptStore;
+  timezone: string;
+  orderingEnabled: boolean;
+}) {
   const [orders, setOrders] = useState(initial);
   const [now, setNow] = useState(() => Date.now());
   const [sound, setSound] = useState(false);
@@ -251,10 +221,18 @@ export function OrderBoard({ initial, timezone, orderingEnabled }: { initial: Ad
 
   useEffect(() => {
     if (!printing) return;
+    let cancelled = false;
     const done = () => setPrinting(null);
     window.addEventListener("afterprint", done);
-    window.print();
-    return () => window.removeEventListener("afterprint", done);
+    // Print only once the logo has loaded, or it comes out blank.
+    const images = Array.from(document.querySelectorAll<HTMLImageElement>(".receipt img"));
+    void Promise.all(images.map((img) => img.decode().catch(() => undefined))).then(() => {
+      if (!cancelled) window.print();
+    });
+    return () => {
+      cancelled = true;
+      window.removeEventListener("afterprint", done);
+    };
   }, [printing]);
 
   const toggleSound = () => {
@@ -335,7 +313,7 @@ export function OrderBoard({ initial, timezone, orderingEnabled }: { initial: Ad
           </div>
         )}
       </div>
-      {printing && <Ticket order={printing} timezone={timezone} />}
+      {printing && <ReceiptTicket order={printing} store={store} timezone={timezone} />}
     </>
   );
 }
